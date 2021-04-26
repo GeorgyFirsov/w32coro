@@ -7,20 +7,20 @@
 namespace w32coro {
 namespace details {
 
-	SehTranslator::SehTranslator()
-		: m_pfnPreviousTranslator(_set_se_translator(&SehTranslator::TranslateToW32Error))
-	{ }
+    SehTranslator::SehTranslator()
+        : m_pfnPreviousTranslator(_set_se_translator(&SehTranslator::TranslateToW32Error))
+    { }
 
-	SehTranslator::~SehTranslator()
-	{
-		_set_se_translator(m_pfnPreviousTranslator);
-	}
+    SehTranslator::~SehTranslator()
+    {
+        _set_se_translator(m_pfnPreviousTranslator);
+    }
 
-	/* static */ 
-	void __cdecl SehTranslator::TranslateToW32Error [[noreturn]] (unsigned int uiCode, _EXCEPTION_POINTERS* /* pPointers */)
-	{
-		throw W32Error{ uiCode };
-	}
+    /* static */ 
+    void __cdecl SehTranslator::TranslateToW32Error [[noreturn]] (unsigned int uiCode, _EXCEPTION_POINTERS* /* pPointers */)
+    {
+        throw W32Error{ uiCode };
+    }
 
 } // namespace details
 } // namespace w32coro

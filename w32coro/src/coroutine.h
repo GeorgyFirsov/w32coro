@@ -8,65 +8,65 @@
 
 namespace w32coro {
 
-	class Coroutine
-	{
-		template<typename Type>
-		friend void CoYield(Type&& value);
+    class Coroutine
+    {
+        template<typename Type>
+        friend void CoYield(Type&& value);
 
-	public:
-		template<typename Callable, typename... Args>
-		explicit Coroutine(Callable&& callable, Args&&... args)
-			: m_pWorker(std::make_unique<details::CImplCoroWorker<Callable, Args...>>(
-				std::forward<Callable>(callable), std::forward<Args>(args)...))
-		{
-			if (hFiber.load(std::memory_order_acquire) == nullptr) {
-				hFiber.store(ConvertThreadToFiber(nullptr), std::memory_order_release);
-			}
+    public:
+        template<typename Callable, typename... Args>
+        explicit Coroutine(Callable&& callable, Args&&... args)
+            : m_pWorker(std::make_unique<details::CImplCoroWorker<Callable, Args...>>(
+                std::forward<Callable>(callable), std::forward<Args>(args)...))
+        {
+            if (hFiber.load(std::memory_order_acquire) == nullptr) {
+                hFiber.store(ConvertThreadToFiber(nullptr), std::memory_order_release);
+            }
 
-			if (hFiber.load(std::memory_order_acquire) == nullptr) {
-				throw W32Error{};
-			}
+            if (hFiber.load(std::memory_order_acquire) == nullptr) {
+                throw W32Error{};
+            }
 
-			m_lpCurrentFiber = CreateFiber(
-				0, reinterpret_cast<LPFIBER_START_ROUTINE>(&Coroutine::FiberProcedure), this);
-			SwitchToFiber(m_lpCurrentFiber);
-		}
+            m_lpCurrentFiber = CreateFiber(
+                0, reinterpret_cast<LPFIBER_START_ROUTINE>(&Coroutine::FiberProcedure), this);
+            SwitchToFiber(m_lpCurrentFiber);
+        }
 
-		template<typename Type>
-		Type Get()
-		{
+        template<typename Type>
+        Type Get()
+        {
 
-		}
+        }
 
-	private:
-		static VOID WINAPI FiberProcedure(Coroutine* pThis);
+    private:
+        static VOID WINAPI FiberProcedure(Coroutine* pThis);
 
-		template<typename Type>
-		void SwitchToMainAndUpdateState(Type&& value)
-		{
+        template<typename Type>
+        void SwitchToMainAndUpdateState(Type&& value)
+        {
 
-		}
+        }
 
-	private:
-		LPVOID									m_lpCurrentFiber;
-		std::unique_ptr<details::ICoroWorker>	m_pWorker;
+    private:
+        LPVOID                                    m_lpCurrentFiber;
+        std::unique_ptr<details::ICoroWorker>    m_pWorker;
 
-	private:
-		static std::atomic<HANDLE> hFiber;
-	};
+    private:
+        static std::atomic<HANDLE> hFiber;
+    };
 
-	template<typename Type>
-	void CoYield(Type&& value)
-	{
-		details::SehTranslator _;
+    template<typename Type>
+    void CoYield(Type&& value)
+    {
+        details::SehTranslator _;
 
-		auto Context = reinterpret_cast<Coroutine>(GetFiberData());
-		if (!Context) {
-			throw W32Error{ ERROR_INVALID_HANDLE };
-		}
+        auto Context = reinterpret_cast<Coroutine>(GetFiberData());
+        if (!Context) {
+            throw W32Error{ ERROR_INVALID_HANDLE };
+        }
 
-		Context.SwitchToMainAndUpdateState(std::forward<Type>(value));
-	}
+        Context.SwitchToMainAndUpdateState(std::forward<Type>(value));
+    }
 
 } // namespace w32coro
 
