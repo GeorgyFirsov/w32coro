@@ -21,22 +21,21 @@ namespace w32coro {
         class CoroReturnException {};
 
         template<typename Type>
-        friend void CoYield(Type&& value);
+        friend void CoYield(const Type& value);
         friend void CoYield();
 
         template<typename Type>
-        friend void CoReturn(Type&& value);
+        friend void CoReturn(const Type& value);
         friend void CoReturn();
 
     public:
         template<typename Callable, typename... Args>
-        explicit Coroutine(Callable&& callable, Args&&... args)
+        explicit Coroutine(Callable&& callable, Args... args)
             : m_hDoneEvent(TRUE, FALSE)
             , m_lpCurrentFiber(nullptr)
             , m_lpMainFiber(nullptr)
             , m_pException(nullptr)
-            , m_pWorker(std::make_unique<details::CImplCoroWorker<Callable, Args...>>(
-                std::forward<Callable>(callable), std::forward<Args>(args)...))
+            , m_pWorker(std::make_unique<details::CImplCoroWorker<Callable, Args...>>(std::forward<Callable>(callable), args...))
             , m_pState(std::make_unique<details::CImplCoroState<void>>())
         {
             m_lpMainFiber = ConvertThreadToFiber(nullptr);
@@ -66,15 +65,22 @@ namespace w32coro {
         virtual ~Coroutine();
 
         template<typename Type>
-        Type Get()
+        Type Get() const
         {
             //
             // Retrieving result is possible only in case of suspended fiber
             // 
 
             // TODO: implement syncronization
-            return reinterpret_cast<Type*>(m_pState->GetPointer());
+
+            if (m_pException) {
+                std::rethrow_exception(m_pException);
+            }
+
+            return *reinterpret_cast<Type*>(m_pState->GetPointer());
         }
+
+        void Get() const;
 
         void Resume();
 
@@ -96,9 +102,9 @@ namespace w32coro {
         }
 
         template<typename Type>
-        void UpdateState(Type&& value)
+        void UpdateState(const Type& value)
         {
-            m_pState = std::make_unique<details::CImplCoroState<Type>>(std::forward<Type>(value));
+            m_pState = std::make_unique<details::CImplCoroState<Type>>(value);
             // TODO: implement syncronization
         }
 
@@ -129,31 +135,25 @@ namespace w32coro {
     };
 
     template<typename Type>
-    void CoYield(Type&& value)
+    void CoYield(const Type& value)
     {
         auto Context = details::SafeGetFiberData<Coroutine*>();
-        Context->YieldImpl([Context, value{ std::forward<Type>(value )}](){
-            Context->UpdateState(std::forward<Type>(value)); });
-    }
-
-    void CoYield()
-    {
-        auto Context = details::SafeGetFiberData<Coroutine*>();
-        Context->YieldImpl([Context]() { Context->UpdateState(); });
+        Context->YieldImpl([Context, &value]() {
+            Context->UpdateState(value); });
     }
 
     template<typename Type>
-    void CoReturn(Type&& value)
+    void CoReturn(const Type& value)
     {
         auto Context = details::SafeGetFiberData<Coroutine*>();
-        Context->ReturnImpl([Context, value{ std::forward<Type>(value) }](){
-            Context->UpdateState(std::forward<Type>(value)); });
+        Context->ReturnImpl([Context, &value]() {
+            Context->UpdateState(value); });
     }
 
-    void CoReturn()
+    template<typename Type>
+    Type CoAwait(const Coroutine& cor)
     {
-        auto Context = details::SafeGetFiberData<Coroutine*>();
-        Context->ReturnImpl([Context]() { Context->UpdateState(); });
+        return cor.Get<Type>();
     }
 
 } // namespace w32coro

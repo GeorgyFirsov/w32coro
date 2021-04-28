@@ -14,11 +14,20 @@ namespace w32coro {
         WaitForSingleObject(m_hDoneEvent, CoroutineWaitTimeout);
         MarkCompleted();
         DeleteFiber(m_lpCurrentFiber);
+        ConvertFiberToThread();
     }
 
 
     void Coroutine::Resume()
     {
+        //
+        // Cannot resume in case of exception
+        // 
+
+        if (m_pException) {
+            std::rethrow_exception(m_pException);
+        }
+
         //
         // Resumable coroutine must not be completed
         // 
@@ -33,6 +42,16 @@ namespace w32coro {
 
         // TODO: implement syncronization
         SwitchToFiber(m_lpCurrentFiber);
+    }
+
+
+    void Coroutine::Get() const
+    {
+        if (m_pException) {
+            std::rethrow_exception(m_pException);
+        }
+
+        m_pState->GetPointer();
     }
 
 
@@ -52,6 +71,7 @@ namespace w32coro {
         }
 
         pThis->MarkCompleted();
+        pThis->SwitchToMain();
     }
 
 
@@ -72,6 +92,20 @@ namespace w32coro {
     {
         m_hDoneEvent.Set();
         // TODO: implement syncronization
+    }
+
+
+    void CoYield()
+    {
+        auto Context = details::SafeGetFiberData<Coroutine*>();
+        Context->YieldImpl([Context]() { Context->UpdateState(); });
+    }
+
+
+    void CoReturn()
+    {
+        auto Context = details::SafeGetFiberData<Coroutine*>();
+        Context->ReturnImpl([Context]() { Context->UpdateState(); });
     }
 
 } // namespace w32coro

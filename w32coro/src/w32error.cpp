@@ -9,11 +9,11 @@ namespace details {
     std::string ConvertWideStringToString(const std::wstring& wsText)
     {
         int cchString = WideCharToMultiByte(
-            CP_UTF8, 0, wsText.c_str(), wsText.length(), nullptr, 0, nullptr, nullptr);
+            CP_UTF8, 0, wsText.c_str(), static_cast<int>(wsText.length()), nullptr, 0, nullptr, nullptr);
 
         std::string sResult(cchString, '\0');
         WideCharToMultiByte(
-            CP_UTF8, 0, wsText.c_str(), wsText.length(), &sResult[0], cchString, nullptr, nullptr);
+            CP_UTF8, 0, wsText.c_str(), static_cast<int>(wsText.length()), &sResult[0], cchString, nullptr, nullptr);
 
         return sResult;
     }

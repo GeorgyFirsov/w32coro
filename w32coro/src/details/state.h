@@ -7,6 +7,7 @@ namespace details {
 
     struct ICoroState
     {
+        ICoroState() = default;
         virtual ~ICoroState() = default;
 
         virtual void* GetPointer() noexcept = 0;
@@ -19,8 +20,8 @@ namespace details {
         : public ICoroState
     {
     public:
-        CImplCoroState(Type&& value)
-            : m_Value(std::forward<Type>(value))
+        CImplCoroState(const Type& value)
+            : m_Value(value)
         { }
 
         void* GetPointer() noexcept override { return &m_Value; }

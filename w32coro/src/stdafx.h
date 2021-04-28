@@ -11,3 +11,4 @@
 #include <memory>
 #include <atomic>
 #include <functional>
+#include <type_traits>

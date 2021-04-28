@@ -11,6 +11,7 @@ namespace details {
         ICoroWorker(ICoroWorker&&) = delete;
         ICoroWorker& operator=(ICoroWorker&&) = delete;
 
+        ICoroWorker() = default;
         virtual ~ICoroWorker() = default;
 
         virtual void Run() = 0;
@@ -21,9 +22,9 @@ namespace details {
         : public ICoroWorker
     {
     public:
-        CImplCoroWorker(Callable&& callable, Args&&... args)
+        CImplCoroWorker(Callable&& callable, Args... args)
             : m_callable(std::forward<Callable>(callable))
-            , m_args(std::forward_as_tuple<Args...>(args...))
+            , m_args(std::make_tuple(args...))
         { }
 
         void Run() override
