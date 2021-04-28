@@ -18,6 +18,9 @@ int main()
         w32coro::CoReturn(wsData);
     };
     
+    std::wstring wsServerName = L"my.awesome.server";
+    DWORD dwPort = 8080;
+    
     const auto wsReceivedData = w32coro::CoAwait<std::wstring>(
         w32coro::Coroutine(ReceiveData, std::cref(wsServerName), dwPort));
         
