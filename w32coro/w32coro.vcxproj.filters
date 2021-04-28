@@ -39,6 +39,15 @@
     <ClInclude Include="src\details\worker.h">
       <Filter>Header Files\details</Filter>
     </ClInclude>
+    <ClInclude Include="src\details\state.h">
+      <Filter>Header Files\details</Filter>
+    </ClInclude>
+    <ClInclude Include="src\details\functional_impl.h">
+      <Filter>Header Files\details</Filter>
+    </ClInclude>
+    <ClInclude Include="src\details\lock.h">
+      <Filter>Header Files\details</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\coroutine.cpp">
@@ -48,6 +57,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\details\seh.cpp">
+      <Filter>Source Files\details</Filter>
+    </ClCompile>
+    <ClCompile Include="src\details\lock.cpp">
       <Filter>Source Files\details</Filter>
     </ClCompile>
   </ItemGroup>

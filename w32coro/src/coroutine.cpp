@@ -4,19 +4,74 @@
 
 namespace w32coro {
 
-    /* static */ 
-    std::atomic<HANDLE> Coroutine::hFiber = nullptr;
+    /* virtual */
+    Coroutine::~Coroutine()
+    {
+        //
+        // Wait some time and close coroutine handle
+        // 
+
+        WaitForSingleObject(m_hDoneEvent, CoroutineWaitTimeout);
+        MarkCompleted();
+        DeleteFiber(m_lpCurrentFiber);
+    }
+
+
+    void Coroutine::Resume()
+    {
+        //
+        // Resumable coroutine must not be completed
+        // 
+
+        if (WaitForSingleObject(m_hDoneEvent, 0) == WAIT_OBJECT_0) {
+            return;
+        }
+
+        //
+        // Mark running and resume
+        // 
+
+        // TODO: implement syncronization
+        SwitchToFiber(m_lpCurrentFiber);
+    }
+
 
     /* static */
     VOID WINAPI Coroutine::FiberProcedure(Coroutine* pThis)
     {
-        details::SehTranslator _;
-
-        if (!pThis) {
-            throw W32Error{ ERROR_INVALID_HANDLE };
+        try
+        {
+            details::SehTranslator _;
+            pThis->m_pWorker->Run();
+        }
+        catch(const Coroutine::CoroReturnException&)
+        { /* Do nothing here */ }
+        catch(...)
+        {
+            pThis->m_pException = std::current_exception();
         }
 
-        pThis->m_pWorker->Run();
+        pThis->MarkCompleted();
+    }
+
+
+    void Coroutine::UpdateState()
+    {
+        m_pState = std::make_unique<details::CImplCoroState<void>>();
+        // TODO:: implement syncronization
+    }
+
+
+    void Coroutine::SwitchToMain()
+    {
+        SwitchToFiber(m_lpMainFiber);
+    }
+
+
+    void Coroutine::MarkCompleted()
+    {
+        m_hDoneEvent.Set();
+        // TODO: implement syncronization
     }
 
 } // namespace w32coro

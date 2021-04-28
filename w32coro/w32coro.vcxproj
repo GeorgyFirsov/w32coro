@@ -20,7 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\coroutine.h" />
+    <ClInclude Include="src\details\functional_impl.h" />
     <ClInclude Include="src\details\seh.h" />
+    <ClInclude Include="src\details\lock.h" />
+    <ClInclude Include="src\details\state.h" />
     <ClInclude Include="src\details\worker.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\w32error.h" />
@@ -29,6 +32,7 @@
   <ItemGroup>
     <ClCompile Include="src\coroutine.cpp" />
     <ClCompile Include="src\details\seh.cpp" />
+    <ClCompile Include="src\details\lock.cpp" />
     <ClCompile Include="src\w32error.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

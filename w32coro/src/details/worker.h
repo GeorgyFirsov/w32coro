@@ -31,7 +31,7 @@ namespace details {
             RunImpl(std::index_sequence_for<Args...>{});
         }
 
-private:
+    private:
         template<size_t... Idxs>
         void RunImpl(std::index_sequence<Idxs...>)
         {

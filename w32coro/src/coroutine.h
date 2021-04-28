@@ -2,70 +2,158 @@
 #include "stdafx.h"
 #include "w32error.h"
 #include "details/seh.h"
+#include "details/lock.h"
+#include "details/state.h"
 #include "details/worker.h"
+#include "details/functional_impl.h"
 
 
 
 namespace w32coro {
 
+    constexpr DWORD CoroutineWaitTimeout = 2000;
+
+    //
+    // Main coroutine class
+    // 
     class Coroutine
     {
+        class CoroReturnException {};
+
         template<typename Type>
         friend void CoYield(Type&& value);
+        friend void CoYield();
+
+        template<typename Type>
+        friend void CoReturn(Type&& value);
+        friend void CoReturn();
 
     public:
         template<typename Callable, typename... Args>
         explicit Coroutine(Callable&& callable, Args&&... args)
-            : m_pWorker(std::make_unique<details::CImplCoroWorker<Callable, Args...>>(
+            : m_hDoneEvent(TRUE, FALSE)
+            , m_lpCurrentFiber(nullptr)
+            , m_lpMainFiber(nullptr)
+            , m_pException(nullptr)
+            , m_pWorker(std::make_unique<details::CImplCoroWorker<Callable, Args...>>(
                 std::forward<Callable>(callable), std::forward<Args>(args)...))
+            , m_pState(std::make_unique<details::CImplCoroState<void>>())
         {
-            if (hFiber.load(std::memory_order_acquire) == nullptr) {
-                hFiber.store(ConvertThreadToFiber(nullptr), std::memory_order_release);
+            m_lpMainFiber = ConvertThreadToFiber(nullptr);
+
+            if (!m_lpMainFiber) {
+                m_lpMainFiber = GetCurrentFiber();
             }
 
-            if (hFiber.load(std::memory_order_acquire) == nullptr) {
-                throw W32Error{};
-            }
+            VerifyPointer(m_lpMainFiber);
+
+            //
+            // Create fiber for received function
+            // 
 
             m_lpCurrentFiber = CreateFiber(
                 0, reinterpret_cast<LPFIBER_START_ROUTINE>(&Coroutine::FiberProcedure), this);
-            SwitchToFiber(m_lpCurrentFiber);
+
+            VerifyPointer(m_lpCurrentFiber);
+
+            //
+            // Schedule created fiber
+            // 
+
+            Resume();
         }
+
+        virtual ~Coroutine();
 
         template<typename Type>
         Type Get()
         {
+            //
+            // Retrieving result is possible only in case of suspended fiber
+            // 
 
+            // TODO: implement syncronization
+            return reinterpret_cast<Type*>(m_pState->GetPointer());
         }
+
+        void Resume();
 
     private:
         static VOID WINAPI FiberProcedure(Coroutine* pThis);
 
-        template<typename Type>
-        void SwitchToMainAndUpdateState(Type&& value)
+        template<typename UpdateProc>
+        void YieldImpl(UpdateProc&& Proc)
         {
-
+            std::forward<UpdateProc>(Proc)();
+            SwitchToMain();
         }
 
-    private:
-        LPVOID                                    m_lpCurrentFiber;
-        std::unique_ptr<details::ICoroWorker>    m_pWorker;
+        template<typename UpdateProc>
+        void ReturnImpl(UpdateProc&& Proc)
+        {
+            std::forward<UpdateProc>(Proc)();
+            throw CoroReturnException{};
+        }
+
+        template<typename Type>
+        void UpdateState(Type&& value)
+        {
+            m_pState = std::make_unique<details::CImplCoroState<Type>>(std::forward<Type>(value));
+            // TODO: implement syncronization
+        }
+
+        void UpdateState();
+
+        void SwitchToMain();
+
+        void MarkCompleted();
 
     private:
-        static std::atomic<HANDLE> hFiber;
+        // Coroutine function exited
+        ATL::CEvent                              m_hDoneEvent;
+
+        // Pointer to current fiber (internal descriptor)
+        LPVOID                                   m_lpCurrentFiber;
+
+        // Pointer to caller fiber
+        LPVOID                                   m_lpMainFiber;
+
+        // Pointer to the exception (not nullptr if there was an exception in callee)
+        std::exception_ptr                       m_pException;
+
+        // Pointer to type-erasure wrapper over internal callable
+        std::unique_ptr<details::ICoroWorker>    m_pWorker;
+
+        // Pointer to type-erasure wrapper over internal state
+        std::unique_ptr<details::ICoroState>     m_pState;
     };
 
     template<typename Type>
     void CoYield(Type&& value)
     {
-        details::SehTranslator _;
+        auto Context = details::SafeGetFiberData<Coroutine*>();
+        Context->YieldImpl([Context, value{ std::forward<Type>(value )}](){
+            Context->UpdateState(std::forward<Type>(value)); });
+    }
 
-        auto Context = reinterpret_cast<Coroutine>(GetFiberData());
-        if (!Context) {
-            throw W32Error{ ERROR_INVALID_HANDLE };
-        }
+    void CoYield()
+    {
+        auto Context = details::SafeGetFiberData<Coroutine*>();
+        Context->YieldImpl([Context]() { Context->UpdateState(); });
+    }
 
-        Context.SwitchToMainAndUpdateState(std::forward<Type>(value));
+    template<typename Type>
+    void CoReturn(Type&& value)
+    {
+        auto Context = details::SafeGetFiberData<Coroutine*>();
+        Context->ReturnImpl([Context, value{ std::forward<Type>(value) }](){
+            Context->UpdateState(std::forward<Type>(value)); });
+    }
+
+    void CoReturn()
+    {
+        auto Context = details::SafeGetFiberData<Coroutine*>();
+        Context->ReturnImpl([Context]() { Context->UpdateState(); });
     }
 
 } // namespace w32coro
