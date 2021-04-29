@@ -6,7 +6,7 @@ Small hand-written coroutines library. Written in C++14 with Win32 API (Fibers).
 #### Receiving some information from server
 
 ```cpp
-#include <w32coro/w32coro.h>
+#include "w32coro/w32coro.h"
 #include "MyAwesomeProject.h"
 
 int main()
@@ -27,4 +27,36 @@ int main()
     std::wcout << wsReceivedData << std::endl;
 }
 
+```
+
+#### Suspending, resuming and returning various values
+
+Actually this example can be extended to write real generator, that implements some methods such as `begin` and `end` to use it in range-based for loop.
+
+```cpp
+#include "w32coro/w32coro.h"
+#include "MyAwesomeProject.h"
+
+int main()
+{
+    const auto Generate = [](size_t Initial) {
+        while (true) {
+            w32coro::CoYield(Initial++);
+        }
+    };
+    
+    w32coro::Coroutine gen(Generate, 0);
+    
+    std::vector<size_t> Numbers;
+    for (size_t i = 0; i < 10; i++) {
+        Numbers.emplace_back(gen.Get<size_t>());
+    }
+    
+    //
+    // Will print 0 1 2 ...
+    //
+    for (size_t n : Numbers) {
+        std::cout << n << ' ';
+    }
+}
 ```
