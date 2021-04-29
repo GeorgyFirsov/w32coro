@@ -13,9 +13,26 @@
 namespace w32coro {
 
     /**
+     * @brief Coroutine startup type
+     * 
+     * @value Instant - coroutine is scheduled right after creation
+     * @value Delayed - coroutine is not scheduled after creation, additional call to Resume needed
+     */
+    enum class StartupType
+    {
+        Instant = 0,
+        Delayed = 1
+    };
+
+    /**
      * @brief Coroutine wrapper class. Receives any type of callable
      * object and necessary arguments for it
      * 
+     * @method Get - get current state from coroutine.
+     * @method Resume - resume coroutine execution
+     * 
+     * @friend CoYield - set coroutine state and suspend
+     * @friend CoReturn - set coroutine state and exit
      */
     class Coroutine
         : private details::NonCopyable, private details::NonMovable
@@ -33,6 +50,11 @@ namespace w32coro {
     public:
         template<typename Callable, typename... Args>
         explicit Coroutine(Callable&& callable, Args... args)
+            : Coroutine(StartupType::Instant, std::forward<Callable>(callable), args...)
+        { }
+
+        template<typename Callable, typename... Args>
+        explicit Coroutine(StartupType Type, Callable&& callable, Args... args)
             : m_hDoneEvent(TRUE, FALSE)
             , m_lpCurrentFiber(nullptr)
             , m_lpMainFiber(nullptr)
@@ -58,10 +80,12 @@ namespace w32coro {
             VerifyPointer(m_lpCurrentFiber);
 
             //
-            // Schedule created fiber
+            // Schedule created fiber if needed
             // 
 
-            Resume();
+            if (Type == StartupType::Instant) {
+                Resume();
+            }
         }
 
         virtual ~Coroutine();
@@ -136,6 +160,10 @@ namespace w32coro {
         std::unique_ptr<details::ICoroState>     m_pState;
     };
 
+
+    /**
+     * @brief set coroutine state and suspend it
+     */
     template<typename Type>
     void CoYield(const Type& value)
     {
@@ -144,6 +172,10 @@ namespace w32coro {
             Context->UpdateState(value); });
     }
 
+
+    /**
+     * @brief set coroutine state and exit
+     */
     template<typename Type>
     void CoReturn(const Type& value)
     {
@@ -152,6 +184,10 @@ namespace w32coro {
             Context->UpdateState(value); });
     }
 
+
+    /**
+     * @brief wait for coroutine to be stopped (suspended or ended) and get it's state
+     */
     template<typename Type>
     Type CoAwait(const Coroutine& cor)
     {

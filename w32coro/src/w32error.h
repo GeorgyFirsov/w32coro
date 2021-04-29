@@ -12,9 +12,9 @@ namespace details {
 
 } // namespace details
 
-    //
-    // WIN32 error class. Can be constructed from error code
-    // 
+    /**
+     * @brief WIN32 error code wrapper. Used as an exception
+     */
     class W32Error
         : public std::runtime_error
     {
@@ -30,9 +30,9 @@ namespace details {
     };
 
 
-    //
-    // Checks if pointer is not null. If it is, throws W32Error
-    // 
+    /**
+     * @brief Checks if pointer is not null. If it is, throws W32Error
+     */ 
     void VerifyPointer(void* p, DWORD dwFailCode = GetLastError());
 
 } // namespace w32coro

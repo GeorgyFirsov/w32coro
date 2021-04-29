@@ -13,6 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "w32coro_examples", "w32coro_examples\w32coro_examples.vcxproj", "{3D267035-F32D-4706-9D55-3AD2C476758D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0973A31A-77EF-47F7-8FD5-C1C3A11A7C24} = {0973A31A-77EF-47F7-8FD5-C1C3A11A7C24}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +42,14 @@ Global
 		{4CB52E09-34E1-4193-B5E0-C52E7EC4BB21}.Release|x64.Build.0 = Release|x64
 		{4CB52E09-34E1-4193-B5E0-C52E7EC4BB21}.Release|x86.ActiveCfg = Release|Win32
 		{4CB52E09-34E1-4193-B5E0-C52E7EC4BB21}.Release|x86.Build.0 = Release|Win32
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Debug|x64.ActiveCfg = Debug|x64
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Debug|x64.Build.0 = Debug|x64
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Debug|x86.ActiveCfg = Debug|Win32
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Debug|x86.Build.0 = Debug|Win32
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Release|x64.ActiveCfg = Release|x64
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Release|x64.Build.0 = Release|x64
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Release|x86.ActiveCfg = Release|Win32
+		{3D267035-F32D-4706-9D55-3AD2C476758D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
