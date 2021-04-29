@@ -1,16 +1,13 @@
 #pragma once
 #include "stdafx.h"
+#include "details/utils.h"
 
 namespace w32coro {
 namespace details {
 
     struct ICoroWorker 
+        : private NonCopyable, private NonMovable
     {
-        ICoroWorker(const ICoroWorker&) = delete;
-        ICoroWorker& operator=(const ICoroWorker&) = delete;
-        ICoroWorker(ICoroWorker&&) = delete;
-        ICoroWorker& operator=(ICoroWorker&&) = delete;
-
         ICoroWorker() = default;
         virtual ~ICoroWorker() = default;
 

@@ -8,10 +8,9 @@ namespace w32coro {
     Coroutine::~Coroutine()
     {
         //
-        // Wait some time and close coroutine handle
+        // Mark coroutine as completed and free all resources
         // 
 
-        WaitForSingleObject(m_hDoneEvent, CoroutineWaitTimeout);
         MarkCompleted();
         DeleteFiber(m_lpCurrentFiber);
         ConvertFiberToThread();

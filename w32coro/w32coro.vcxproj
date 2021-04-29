@@ -24,6 +24,7 @@
     <ClInclude Include="src\details\seh.h" />
     <ClInclude Include="src\details\lock.h" />
     <ClInclude Include="src\details\state.h" />
+    <ClInclude Include="src\details\utils.h" />
     <ClInclude Include="src\details\worker.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\w32error.h" />

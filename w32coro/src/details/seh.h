@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "details/utils.h"
 
 
 
@@ -7,12 +8,8 @@ namespace w32coro {
 namespace details {
 
     class SehTranslator final
+        : private NonCopyable, private NonMovable
     {
-        SehTranslator(const SehTranslator&) = delete;
-        SehTranslator& operator=(const SehTranslator&) = delete;
-        SehTranslator(SehTranslator&&) = delete;
-        SehTranslator& operator=(SehTranslator&&) = delete;
-
     public:
         SehTranslator();
         ~SehTranslator();

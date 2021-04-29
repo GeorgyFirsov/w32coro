@@ -10,9 +10,7 @@ TEST(Creation, EmptyNoError)
 
 TEST(Creation, MultipleNoError)
 {
-    EXPECT_NO_THROW(
-        w32coro::Coroutine cor1{ []() {} };
-    );
+    w32coro::Coroutine cor1{ []() {} };
 
     EXPECT_NO_THROW(
         w32coro::Coroutine cor2{ []() {} };
@@ -83,6 +81,31 @@ TEST(ErrorInCallee, GetResult)
     );
 }
 
+TEST(ErrorInCallee, NoResume)
+{
+    w32coro::Coroutine cor{
+        []() {
+            w32coro::CoYield(10);
+            throw std::runtime_error{"Test exception"};
+            w32coro::CoYield(20);
+        }
+    };
+
+    EXPECT_EQ(
+        cor.Get<int>(),
+        10
+    );
+
+    EXPECT_NO_THROW(
+        cor.Resume()
+    );
+
+    EXPECT_THROW(
+        cor.Resume(),
+        std::runtime_error
+    );
+}
+
 TEST(YieldResult, NoError)
 {
     w32coro::Coroutine cor{
@@ -102,10 +125,6 @@ TEST(YieldResult, NoError)
 
     EXPECT_NO_THROW(
         cor.Get<int>();
-    );
-
-    EXPECT_NO_THROW(
-        cor.Resume();
     );
 }
 
@@ -129,8 +148,6 @@ TEST(YieldResult, ExactMatch)
         cor.Get<int>(),
         20
     );
-
-    cor.Resume();
 }
 
 TEST(AwaitResult, NoError)
@@ -143,9 +160,11 @@ TEST(AwaitResult, NoError)
     std::string server = "my.awesome.host";
     size_t port = 8080;
 
+    //
+    // Exp
     const auto Result = w32coro::CoAwait<std::string>(
         w32coro::Coroutine(GetResult, std::cref(server), port));
-
+    
     EXPECT_STREQ(
         Result.c_str(),
         "Hello world!"

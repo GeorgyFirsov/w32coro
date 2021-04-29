@@ -48,6 +48,9 @@
     <ClInclude Include="src\details\lock.h">
       <Filter>Header Files\details</Filter>
     </ClInclude>
+    <ClInclude Include="src\details\utils.h">
+      <Filter>Header Files\details</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\coroutine.cpp">

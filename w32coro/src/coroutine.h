@@ -3,6 +3,7 @@
 #include "w32error.h"
 #include "details/seh.h"
 #include "details/lock.h"
+#include "details/utils.h"
 #include "details/state.h"
 #include "details/worker.h"
 #include "details/functional_impl.h"
@@ -11,12 +12,13 @@
 
 namespace w32coro {
 
-    constexpr DWORD CoroutineWaitTimeout = 2000;
-
-    //
-    // Main coroutine class
-    // 
+    /**
+     * @brief Coroutine wrapper class. Receives any type of callable
+     * object and necessary arguments for it
+     * 
+     */
     class Coroutine
+        : private details::NonCopyable, private details::NonMovable
     {
         class CoroReturnException {};
 
