@@ -50,6 +50,7 @@ int main()
     std::vector<size_t> Numbers;
     for (size_t i = 0; i < 10; i++) {
         Numbers.emplace_back(gen.Get<size_t>());
+        gen.Resume();
     }
     
     //
